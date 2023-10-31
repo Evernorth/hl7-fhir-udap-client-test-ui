@@ -88,10 +88,10 @@ Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for info on how to get in
 
 ## License
 
-hl7-fhir-udap-test-client is Open Source Software released under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html).
+hl7-fhir-udap-test-client-ui is Open Source Software released under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Original Contributors
 
-The hl7-fhir-udap-client was developed originally as a collaborative effort between [Evernorth](https://www.evernorth.com/) and [Okta](https://www.okta.com/).  We would like to recognize the following people for their initial contributions to the project: 
+The hl7-fhir-udap-test-client-ui was developed originally as a collaborative effort between [Evernorth](https://www.evernorth.com/) and [Okta](https://www.okta.com/).  We would like to recognize the following people for their initial contributions to the project: 
  - Tom Loomis - Evernorth
  - Dan Cinnamon - Okta
