@@ -1,5 +1,5 @@
 'use strict'
-const udapClient = require('udap-client')
+const udapClient = require('hl7-fhir-udap-client')
 const express = require('express')
 const config = require('config')
 const fs = require('fs')

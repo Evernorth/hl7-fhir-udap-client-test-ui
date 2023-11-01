@@ -1,19 +1,29 @@
 {
-  "name": "udap-client-ui",
-  "version": "0.0.1",
-  "description": "node.js UDAP client test harness; UI to test UDAP functionality",
+  "name": "hl7-fhir-udap-test-client-ui",
+  "version": "1.0.0",
+  "description": "node.js UDAP client test harness; UI to test UDAP client functionality",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Evernorth/Okta",
-  "license": "ISC",
+  "license": "Apache-2.0",
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/Evernorth/hl7-fhir-udap-test-client-ui/issues"
+  },
+  "homepage": "https://github.com/Evernorth/hl7-fhir-udap-test-client-ui#readme",
   "dependencies": {
     "axios": "^1.4.0",
     "config": "^3.3.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "hbs": "^4.2.0",
-    "udap-client": "file:../udap-client"
+    "hl7-fhir-udap-client": "file:../hl7-fhir-udap-client"
   }
 }
