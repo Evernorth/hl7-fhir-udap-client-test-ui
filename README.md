@@ -19,7 +19,7 @@ Links to the other repositories in the collection:
 
 ## Getting Started
 
-[UDAP](https://www.udap.org/) is a trust community protocol built on top of Oauth (Open Authorization) 2.0 and OIDC (Open Identity Connect).   It combines the PKI with Oauth and OIDC to provide the trust community protocol.  The specific trust community has a CA (Certificate Authority) or multiple CA's, that issue X.509 certificates to all members of the community.  To be clear these are not the same as SSL certificates that can be obtained by proving ownership of a domain.  These are issued out of band with after proofing the identity of the organization obtaining the certificate.
+[UDAP](https://www.udap.org/) is a trust community protocol built on top of Oauth (Open Authorization) 2.0 and OIDC (OpenID Connect).   It combines PKI (Public Key Infrastructure) with Oauth and OIDC to provide the trust community protocol.  The specific trust community has a CA (Certificate Authority) or multiple CA's, that issue X.509 certificates to all members of the community.  To be clear these are not the same as SSL certificates that can be obtained by proving ownership of a domain.  These are issued out of band with after proofing the identity of the organization obtaining the certificate.
 
 The public and private keys contained in the X.509 certificate are used to provide the signing keys and verifying keys for JWT's (JSON Web Token).  The X.509 certificates are contained in the header of the JWT's moving the authentication mechanism to the application layer.
 
