@@ -14,8 +14,9 @@ app.use(express.urlencoded());
 app.set('views', './views')
 app.set('view engine', 'hbs')
 app.set('trust proxy', 1) // trust first proxy
+var sessionSecret = config.get("sessionSecret")
 app.use(session({
-    secret: 'asodiufhaoisdfja;odsfji',
+    secret: sessionSecret,
     resave: true,
     saveUninitialized: true
 }))
@@ -346,7 +347,6 @@ app.post('/', async (req, res) => {
             //Run our FHIR query here!
             const patientSearchUrl = udapServer.serverBaseUrl + '/Patient?birthdate=' + formattedDob + '&family=' + req.body.familyName + "&given=" + req.body.givenName
             console.log("Invoking FHIR URL: " + patientSearchUrl)
-            console.log("Access token: " + accessToken)
             const patientSearchResults = await axios.request({
                 'url': patientSearchUrl,
                 'method': 'GET',
@@ -354,6 +354,8 @@ app.post('/', async (req, res) => {
                 'validateStatus': () => true,
             })
             console.log("Response Code: " + patientSearchResults.status)
+            //TODO: Remove before production
+            //Logging a response with PII/PHI should only be done if log target is encrypted/secured
             console.log("Response Data: " + JSON.stringify(patientSearchResults.data))
             patientSearchResponse = "StatusCode: " + patientSearchResults.status + "\n"
             patientSearchResponse += "Body: " + JSON.stringify(patientSearchResults.data)
@@ -414,6 +416,8 @@ app.post('/', async (req, res) => {
                     }
                 ]
             }
+            //TODO: Remove before production
+            //Logging a request with PII/PHI should only be done if log target is encrypted/secured
             console.log("JSON Match Request: " + JSON.stringify(jsonData))
             const patientMatchResults = await axios.request({
                 'url': patientMatchUrl,

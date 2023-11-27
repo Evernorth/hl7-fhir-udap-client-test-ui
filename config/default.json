@@ -16,5 +16,6 @@
     "b2cSan": "SAN to use for B2C client",
     "b2bSan":"SAN to use for B2B client",
     "logouri": "path to logo uri .PNG, JPG, or GIF image file"
-  }
+  },
+  "sessionSecret": "asodiufhaoisdfja;odsfji"
 }
