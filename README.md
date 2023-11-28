@@ -2,13 +2,13 @@
 
 ## Overview
 
-This nodejs/express/handlebars user interface project represents a user interface/test harness for a full UDAP (Unified Data Access Profiles) Client implementation. The user interface is part of a four-repository collection for a full [UDAP](https://www.udap.org/) implementation. The implementation adheres to published Version 1.0 of the [HL7 UDAP Security Implementation Guide](https://hl7.org/fhir/us/udap-security).
+This nodejs/express/handlebars user interface project represents a user interface/test harness for a full UDAP (Unified Data Access Profiles) Client implementation. The user interface is part of a four-repository collection for a full [UDAP](https://www.udap.org/) implementation. The implementation adheres to published Version 1.0 of the [HL7 UDAP Security Implementation Guide](http://hl7.org/fhir/us/udap-security/STU1/).
 
 The client side components of the following features of the IG are supported:
-- [UDAP trusted dynamic client registration](https://hl7.org/fhir/us/udap-security/registration.html)
-- [B2B Authorization](https://hl7.org/fhir/us/udap-security/b2b.html)
-- [B2C Authorization](https://hl7.org/fhir/us/udap-security/consumer.html)
-- [Tiered OAuth](https://hl7.org/fhir/us/udap-security/user.html)
+- [UDAP trusted dynamic client registration](http://hl7.org/fhir/us/udap-security/STU1//registration.html)
+- [B2B Authorization](http://hl7.org/fhir/us/udap-security/STU1//b2b.html)
+- [B2C Authorization](http://hl7.org/fhir/us/udap-security/STU1//consumer.html)
+- [Tiered OAuth](http://hl7.org/fhir/us/udap-security/STU1//user.html)
 
 The user interface supports the UDAP version of OAuth2 Client Credentials Flow and Authorization Code Flow. Throughout the user interface (and code base), they are referred to as B2B (Client Credentials Flow) and B2C (Authorization Code Flow).
 
@@ -32,7 +32,7 @@ The following features are supported by the user interface:
 
 **UDAP B2C Authorization**: This supports the UDAP version of OAuth2 Authorization Code Flow for authenticating and obtaining an access token. It is triggered by clicking the Get Token button in the B2C Token section of the user interface.
 
-**UDAP Tiered OAuth**: This supports the [Tiered OAuth](https://hl7.org/fhir/us/udap-security/user.html) flow, where the client passes in a preferred OpenID Connect Identity Provider (IDP) that the client wishes to user for user authentication. This is triggerd by populating the Upstream IDP URL text box in the B2C Token section of the user interface and then clicking the Get Token button in the same section. The Upstream IDP URL box will be disabled if the currently selected server does not support Tiered OAuth.
+**UDAP Tiered OAuth**: This supports the [Tiered OAuth](http://hl7.org/fhir/us/udap-security/STU1//user.html) flow, where the client passes in a preferred OpenID Connect Identity Provider (IDP) that the client wishes to user for user authentication. This is triggerd by populating the Upstream IDP URL text box in the B2C Token section of the user interface and then clicking the Get Token button in the same section. The Upstream IDP URL box will be disabled if the currently selected server does not support Tiered OAuth.
 
 ## User Interface FHIR Features
 
