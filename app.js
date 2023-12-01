@@ -95,7 +95,7 @@ redirect_uris
 async function registration(registrationObject, req, udapClient) {
     try {
         const udapDCRResponse = await udapClient.udapDynamicClientRegistration(registrationObject)
-        console.log(udapDCRResponse)
+        console.debug(udapDCRResponse)
         if (udapDCRResponse.status == 201 || udapDCRResponse.status == 200) {
             req.session.registrationError = ""
             return udapDCRResponse.data
@@ -292,8 +292,8 @@ app.post('/', async (req, res) => {
                     udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
                 }
                 var authorizeData = await udapClientB2c.udapAuthorizeRequest(req.body.idpUrl, udapServer.authCodeScopes, redirectUrl)
-                console.log("Authorize Data: ")
-                console.log(authorizeData)
+                console.debug("Authorize Data: ")
+                console.debug(authorizeData)
                 req.session.authz_state = authorizeData.state
                 res.redirect(authorizeData.authorizeUrl)
             }
@@ -315,8 +315,8 @@ app.post('/', async (req, res) => {
             }
             //Run our FHIR query here!
             var resource = req.body.resourceToGet
-            console.log("Resource: " + resource)
-            console.log("Patient id: " + req.body.patientId)
+            console.debug("Resource: " + resource)
+            console.debug("Patient id: " + req.body.patientId)
             var patientUrl = ""
             if (resource == 'Patient') {
                 patientUrl = udapServer.serverBaseUrl + '/Patient/' + req.body.patientId
@@ -324,14 +324,14 @@ app.post('/', async (req, res) => {
             else {
                 patientUrl = udapServer.serverBaseUrl + '/' + resource + '?patient=' + req.body.patientId
             }
-            console.log("Invoking FHIR URL: " + patientUrl)
+            console.debug("Invoking FHIR URL: " + patientUrl)
             const patientQueryResults = await axios.request({
                 'url': patientUrl,
                 'method': 'GET',
                 'headers': { 'Authorization': 'Bearer ' + accessToken },
                 'validateStatus': () => true,
             })
-            console.log("Response Code: " + patientQueryResults.status)
+            console.debug("Response Code: " + patientQueryResults.status)
             patientQueryResponse = "StatusCode: " + patientQueryResults.status + "\n"
             patientQueryResponse += "Body: " + JSON.stringify(patientQueryResults.data)
         }
@@ -346,17 +346,13 @@ app.post('/', async (req, res) => {
             var formattedDob = formatDate(Date.parse(req.body.dob))
             //Run our FHIR query here!
             const patientSearchUrl = udapServer.serverBaseUrl + '/Patient?birthdate=' + formattedDob + '&family=' + req.body.familyName + "&given=" + req.body.givenName
-            console.log("Invoking FHIR URL: " + patientSearchUrl)
+            console.debug("Invoking FHIR URL: " + patientSearchUrl)
             const patientSearchResults = await axios.request({
                 'url': patientSearchUrl,
                 'method': 'GET',
                 'headers': { 'Authorization': 'Bearer ' + accessToken },
                 'validateStatus': () => true,
             })
-            console.log("Response Code: " + patientSearchResults.status)
-            //TODO: Remove before production
-            //Logging a response with PII/PHI should only be done if log target is encrypted/secured
-            console.log("Response Data: " + JSON.stringify(patientSearchResults.data))
             patientSearchResponse = "StatusCode: " + patientSearchResults.status + "\n"
             patientSearchResponse += "Body: " + JSON.stringify(patientSearchResults.data)
         }
@@ -370,7 +366,7 @@ app.post('/', async (req, res) => {
             }
             //Run our FHIR query here!
             const patientMatchUrl = udapServer.serverBaseUrl + '/Patient/$match'
-            console.log("Invoking FHIR URL: " + patientMatchUrl)
+            console.debug("Invoking FHIR URL: " + patientMatchUrl)
             var formattedDob = formatDate(Date.parse(req.body.dob))
             const jsonData = {
                 "resourceType": "Parameters",
@@ -418,7 +414,7 @@ app.post('/', async (req, res) => {
             }
             //TODO: Remove before production
             //Logging a request with PII/PHI should only be done if log target is encrypted/secured
-            console.log("JSON Match Request: " + JSON.stringify(jsonData))
+            console.debug("JSON Match Request: " + JSON.stringify(jsonData))
             const patientMatchResults = await axios.request({
                 'url': patientMatchUrl,
                 'method': 'POST',
@@ -429,7 +425,7 @@ app.post('/', async (req, res) => {
                 'data': jsonData,
                 'validateStatus': () => true,
             })
-            console.log("Response Code: " + patientMatchResults.status)
+            console.debug("Response Code: " + patientMatchResults.status)
             patientMatchResponse = "StatusCode: " + patientMatchResults.status + "\n"
             patientMatchResponse += "Body: " + JSON.stringify(patientMatchResults.data)
         }
