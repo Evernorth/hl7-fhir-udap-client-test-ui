@@ -1,5 +1,9 @@
 # hl7-fhir-udap-test-client-ui
 
+## Getting Started
+
+For a general overview of UDAP as well as a getting starting guide of the full four-repository collection see [UDAP Documentation](https://github.com/Evernorth/hl7-fhir-udap-docs#readme)
+
 ## Overview
 
 This nodejs/express/handlebars user interface project represents a user interface/test harness for a full UDAP (Unified Data Access Profiles) Client implementation. The user interface is part of a four-repository collection for a full [UDAP](https://www.udap.org/) implementation. The implementation adheres to published Version 1.0 of the [HL7 UDAP Security Implementation Guide](http://hl7.org/fhir/us/udap-security/STU1/).
@@ -18,13 +22,13 @@ Links to the other repositories in the collection:
 - [hl7-fhir-udap-server](https://github.com/Evernorth/hl7-fhir-udap-server#readme)
 
 ## Client User Interface
-![Client User Interface](./doc/ClientUIFull.png)
+![Client User Interface](./images/ClientUIFull.png)
 
 ## User Interface UDAP Features
 The following features are supported by the user interface:
 
 **Add Servers**: The user interface supports adding different UDAP servers so the client can connect with multiple different servers in the community.
-![Add Server Screen](./doc/AddServer.png)
+![Add Server Screen](./images/AddServer.png)
 
 **UDAP trusted dynamic client registration**: When a new server is added the next step is to have the client register with that server.  Using the Register Client button, the client is triggered to use UDAP trusted dynamic client registration to dynamically get a client id for that server. The registration is executed twice, once for Authorization Code Flow (B2C Registration) and once for Client Credentials Flow (B2B Registration). If a client id already exists, an "edit registration" is performed.
 
@@ -83,7 +87,7 @@ If you have questions, concerns, bug reports, etc., file an issue in this reposi
 
 ## Getting Involved
 
-See the [CONTRIBUTING.md](CONTRIBUTING.md) file for info on how to get involved.
+See the [CONTRIBUTING](CONTRIBUTING.md) file for info on how to get involved.
 
 ## License
 
