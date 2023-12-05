@@ -80,6 +80,9 @@ node app.js
 
 After you run the app, the first thing you will be presented with is the Add Server screen.  
 
+## Known Issues
+- The Add Server form does not use client side validation.  Once that is added the check on the server side can be removed.
+- Console.debug statements with TODO comments should not be inlcuded in production applications.
 
 ## Getting Help
 
