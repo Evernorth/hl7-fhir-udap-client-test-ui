@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>UDAP Client Application</title>
+
+    <!-- Bootstrap core CSS v5.3.1-->
+    <link href="/static/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <!-- Bootstrap js bundle v5.3.1 -->
+    <script src="/static/bootstrap.bundle.min.js"></script>
+    {{!--
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.slim.min.js"></script> --}}
+    {{!--
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script> --}}
+    <!-- Custom styles for this template -->
+    <link href="/static/udapclient.css" rel="stylesheet" type="text/css">
+    <!--Client side js file-->
+    {{!--
+    <script src="/static/client.js"></script> --}}
+    <script>
+        window.onload = function maybeShowModal() {
+            var mustAddServer = {{mustAddServer}}
+            var serverBaseUrl = document.getElementById('serverBaseUrl')
+            if ((serverBaseUrl.value != '')|| (mustAddServer == true)) {
+                var myModal = new bootstrap.Modal(document.getElementById("addServerModal"), {});
+                myModal.show();
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div
+        class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow border border-primary">
+        <div class="mt-auto p-2 bd-highlight">
+            {{!-- <img src="/static/logo.png" /> --}}
+            <h5 class="my-0 mr-md-auto font-weight-normal">{{clientName}}</h5>
+        </div>
+        <div class="col-xs-3">
+            <form id="serverSelect" action="/" method="POST">
+                <div class="input-group">
+                    <label class="input-group-text input-group-text-md" for="inputGroupSelect01">Servers</label>
+                    <select class="form-select form-select-md" name="dropDownServerSelect" id="dropDownServerSelect"
+                        onchange="this.form.submit()">
+                        {{#each udapServers}}
+                            <option{{#if this.selected}} selected {{/if}}>{{this.name}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="mt-auto p-2 bd-highlight">Configured Base Url: {{udapServer.serverBaseUrl}}</div>
+        <div class="mt-auto p-2 bd-highlight">
+            <form id="clear" action="/" method="POST">
+                <input type="hidden" name="action" value="clearSession" />
+                <button type="submit" class="btn btn-block btn-primary">Clear Test Session</button>
+            </form>
+        </div>
+        <div class="mt-auto p-2 bd-highlight">
+            <button type="submit" class="btn btn-block btn-primary" data-bs-toggle="modal"
+                data-bs-target="#addServerModal">Add
+                UDAP Server</button>
+        </div>
+    </div>
+    <!-- Add Server Modal -->
+    <!-- Button trigger modal div id -->
+    <div class="modal fade" id="addServerModal" tabindex="-1" role="dialog" aria-labelledby="addServerLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addServerLabel">Add UDAP Server</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="udapServer" action="/" method="POST">
+                        <div class="form-group">
+                            <label class="sr-only" for="serverName">Server Name</label>
+                            <input type="text" class="form-control mb-2" id="serverName" placeholder="Server Name"
+                                name="serverName" value='{{newUdapServer.name}}'>
+                            <input type="hidden" name="action" value="addServer" />
+                            <div class="invalid-feedback">
+                                Please choose a Server Name.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="baseUrl">Base Url</label>
+                            <input type="text" class="form-control mb-2" id="serverBaseUrl" placeholder="Base Url"
+                                name="serverBaseUrl" value='{{newUdapServer.serverBaseUrl}}'>
+                            <input type="hidden" name="action" value="getMetaData" />
+                            <button type="submit" class="btn btn-primary mb-2" id="getMetaData" name="getMetaData"
+                                formaction="/getMetaData">Get Metadata</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="ccScopes">Client Credentials Scopes</label>
+                            <textarea class="form-control" id="ccScopes" placeholder="Client Credentials Scopes" name="ccScopes" rows="5">{{newUdapServer.ccScopes}}</textarea>
+                            <div class="invalid-feedback">
+                                Please list the Client Credential Scopes seperated by a space.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="authCodeScopes">Authorization Code Scopes</label>
+                            <textarea class="form-control" id="authCodeScopes"  placeholder="Auth Code Credentials Scopes" name="authCodeScopes" rows="4">{{newUdapServer.authCodeScopes}}</textarea>
+                            <div class="invalid-feedback">
+                                Please list the Auth Code Scopes seperated by a space.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" name="action" value="saveServer" />
+                            <button type="button" class="btn btn-secondary mb-2" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary mb-2" id="saveServer" name="saveServer"
+                                formaction="/saveserver" data-bs-dismiss="modal">Save Server</button>
+                        </div>
+                        <div>
+                            <ul>
+                                <li>Error: {{addServerError}}</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <div class="container">
+                    <div class="card-deck mb-3 text-center">
+                        <div class="card mb-4 box-shadow">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">Client Details</h4>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mt-3 mb-4">
+                                    <li><span class="fw-bold">Client Name:</span> {{clientName}}</li>
+                                    <li><span class="fw-bold">B2B Client Id:</span> {{udapServer.ccClientId}}</li>
+                                    <li><span class="fw-bold">B2C Client Id:</span> {{udapServer.authCodeClientId}}</li>
+                                    <li><span class="fw-bold">B2B Scopes Requested:</span> {{udapServer.ccScopes}}</li>
+                                    <li><span class="fw-bold">B2C Scopes Requested:</span> {{udapServer.authCodeScopes}}</li>
+                                    <li><span class="fw-bold">Error from Registration:</span> {{registrationError}}</li>
+                                </ul>
+                                <form id="reg" action="/" method="POST">
+                                    <input type="hidden" name="action" value="clientReg" />
+                                    <button type="submit" class="btn btn-lg btn-block btn-primary">Register
+                                        Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-deck mb-3 text-center">
+                        <div class="card mb-4 box-shadow">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">B2B Token</h4>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mt-3 mb-4">
+                                    <li><span class="fw-bold">Issued to:</span> {{b2bTokenSubject}}</li>
+                                    <li><span class="fw-bold">Content:</span></li>
+                                    <li>{{b2bToken}}</li>
+                                    <li><span class="fw-bold">Error from Token Request:</span> {{b2bTokenError}}</li>
+                                </ul>
+                                <form id="b2b" action="/" method="POST">
+                                    <input type="hidden" name="action" value="getB2bToken" />
+                                    <button type="submit" class="btn btn-lg btn-block btn-primary">Get
+                                        Token</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card mb-4 box-shadow">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">B2C Token</h4>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mt-3 mb-4">
+                                    <li><span class="fw-bold">Issued to:</span> {{b2cTokenSubject}}</li>
+                                    <li><span class="fw-bold">Content:</span></li>
+                                    <li>{{b2cToken}}</li>
+                                    <li><span class="fw-bold">Error from Token Request:</span> {{b2cTokenError}}</li>
+                                </ul>
+                                <form id="b2c" action="/" method="POST">
+                                    <div class="form-row align-items-center">
+                                        <div class="col-auto">
+                                            <label class="sr-only" for="idpUrl">IDP Url</label>
+                                            <input type="text" class="form-control mb-2" id="idpUrl"
+                                                placeholder="Upstream IDP Url" name="idpUrl" {{#unless udapServer.supportsTieredOAuth}} disabled {{/unless}}>
+                                            <input type="hidden" name="action" value="getB2cToken" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row align-items-center">
+                                        <div class="col-auto">
+                                            <button type="submit" class="btn btn-lg btn-block btn-primary">Get
+                                                Token</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card mb-4 box-shadow">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal">FHIR Request</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="query" class="form-inline" method="POST">
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="sr-only" for="inputPatientId">Name</label>
+                                    <input type="text" class="form-control mb-2" id="inputPatientId"
+                                        placeholder="Patient ID" name="patientId">
+                                    <input type="hidden" name="action" value="patientQuery" />
+                                </div>
+                                <div class="col-auto">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio1"
+                                            value="b2b" checked>
+                                        <label class="form-check-label" for="inlineRadio1">Use B2B Token</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio2"
+                                            value="b2c">
+                                        <label class="form-check-label" for="inlineRadio2">Use B2C Token</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="resourceToGet"
+                                            id="inlineRadio1" value="Patient" checked>
+                                        <label class="form-check-label" for="inlineRadio1">Get Patient</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="resourceToGet"
+                                            id="inlineRadio3" value="AllergyIntolerance">
+                                        <label class="form-check-label" for="inlineRadio3">Get Allergy</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="resourceToGet"
+                                            id="inlineRadio2" value="Condition">
+                                        <label class="form-check-label" for="inlineRadio2">Get Condition</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="resourceToGet"
+                                            id="inlineRadio4" value="MedicationRequest">
+                                        <label class="form-check-label" for="inlineRadio4">Get Medication</label>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-primary mb-2">Get Patient Data</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="fhirResults">
+                            {{queryResponse}}
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4 box-shadow">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal">FHIR Patient search</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="query" class="form-inline" method="POST">
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="sr-only" for="givenName">Given Name</label>
+                                    <input type="text" class="form-control mb-2" id="inputGivenName"
+                                        placeholder="Given Name" name="givenName">
+                                    <input type="hidden" name="action" value="patientSearch" />
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="familyName">Family Name</label>
+                                    <input type="text" class="form-control mb-2" id="inputfamilyName"
+                                        placeholder="Family Name" name="familyName">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="dob">DOB</label>
+                                    <input type="text" class="form-control mb-2" id="inputDOB"
+                                        placeholder="Date of Birth" name="dob">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="gender">DOB</label>
+                                    <input type="text" class="form-control mb-2" id="inputGender" placeholder="Gender"
+                                        name="gender">
+                                </div>
+
+                                <div class="col-auto">
+                                    <label class="sr-only" for="phone">Email</label>
+                                    <input type="text" class="form-control mb-2" id="inputPhone"
+                                        placeholder="Phone Number" name="phone">
+                                </div>
+                                <div class="col-auto">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio1"
+                                            value="b2b" checked>
+                                        <label class="form-check-label" for="inlineRadio1">Use B2B Token</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio2"
+                                            value="b2c">
+                                        <label class="form-check-label" for="inlineRadio2">Use B2C Token</label>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-primary mb-2">Get Patient Search</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="fhirResults">
+                            {{patientSearchResponse}}
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4 box-shadow">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal">FHIR Patient $match</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="query" class="form-inline" method="POST">
+                            <!--  <label class="sr-only" for="inputPatientId">Name</label>
+                            <input type="text" class="form-control mb-2 mr-sm-2" id="inputPatientId" placeholder="Patient ID">
+                            <input type="hidden" name="action" value="patient_query" />
+                            <button type="submit" class="btn btn-primary mb-2">Get Patient Data</button> -->
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="sr-only" for="givenName">Given Name</label>
+                                    <input type="text" class="form-control mb-2" id="inputGivenName"
+                                        placeholder="Given Name" name="givenName">
+                                    <input type="hidden" name="action" value="patient_match" />
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="familyName">Family Name</label>
+                                    <input type="text" class="form-control mb-2" id="inputfamilyName"
+                                        placeholder="Family Name" name="familyName">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="dob">DOB</label>
+                                    <input type="text" class="form-control mb-2" id="inputDOB"
+                                        placeholder="Date of Birth" name="dob">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="gender">DOB</label>
+                                    <input type="text" class="form-control mb-2" id="inputGender" placeholder="Gender"
+                                        name="gender">
+                                </div>
+
+                                <div class="col-auto">
+                                    <label class="sr-only" for="phone">Email</label>
+                                    <input type="text" class="form-control mb-2" id="inputPhone"
+                                        placeholder="Phone Number" name="phone">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="sr-only" for="phone">Phone</label>
+                                    <input type="text" class="form-control mb-2" id="inputPhone"
+                                        placeholder="Phone Number" name="phone">
+                                </div>
+                            </div>
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="validation_level"
+                                            id="inlineRadio1" value="IDI-Patient" checked>
+                                        <label class="form-check-label" for="inlineRadio1">IDI-Patient</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="validation_level"
+                                            id="inlineRadio2" value="IDI-Patient-L0">
+                                        <label class="form-check-label" for="inlineRadio2">IDI-Patient-L0</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="validation_level"
+                                            id="inlineRadio3" value="IDI-Patient-L1">
+                                        <label class="form-check-label" for="inlineRadio2">IDI-Patient-L1</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-auto">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="b2bToken"
+                                            value="b2b" checked>
+                                        <label class="form-check-label" for="b2bToken">Use B2B Token</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="b2cToken"
+                                            value="b2c">
+                                        <label class="form-check-label" for="b2cToken">Use B2C Token</label>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-primary mb-2">Post Patient Match</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="fhirResults">
+                            {{matchResponse}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+
+
+</body>
+
+</html>

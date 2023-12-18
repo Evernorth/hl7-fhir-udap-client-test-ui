@@ -1,0 +1,21 @@
+{
+  "server": {
+    "host": "localhost",
+    "port": 3000
+  },
+  "udapclient": {
+    "organizationName": "Your Organization Name",
+    "organizationId": "Your Organization URL",
+    "purposeOfUse": "urn:oid:2.16.840.1.113883.5.8#TREAT",
+    "clientName": "Your Client Name",
+    "clientContact": "mailto:contact@emaildomain.com",
+    "privateKeyFile": "udap_pki/your pk12 file",
+    "privateKeyPassword": "pk12 password",
+    "trustAnchorFile": "udap_pki/Community Trust Anchor",
+    "udapServerFile": "config/udap_servers.json",
+    "b2cSan": "SAN to use for B2C client",
+    "b2bSan":"SAN to use for B2B client",
+    "logouri": "path to logo uri .PNG, JPG, or GIF image file"
+  },
+  "sessionSecret": "unique string to use as session secret"
+}
