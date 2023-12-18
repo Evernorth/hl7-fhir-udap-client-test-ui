@@ -1,5 +1,5 @@
 {
-  "name": "hl7-fhir-udap-test-client-ui",
+  "name": "hl7-fhir-udap-client-test-ui",
   "version": "1.0.0",
   "description": "node.js UDAP client test harness; UI to test UDAP client functionality",
   "main": "app.js",
@@ -15,9 +15,9 @@
     }
   ],
   "bugs": {
-    "url": "https://github.com/Evernorth/hl7-fhir-udap-test-client-ui/issues"
+    "url": "https://github.com/Evernorth/hl7-fhir-udap-client-test-ui/issues"
   },
-  "homepage": "https://github.com/Evernorth/hl7-fhir-udap-test-client-ui#readme",
+  "homepage": "https://github.com/Evernorth/hl7-fhir-udap-client-test-ui#readme",
   "dependencies": {
     "axios": "^1.4.0",
     "config": "^3.3.9",

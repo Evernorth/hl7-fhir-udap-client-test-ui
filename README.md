@@ -1,4 +1,4 @@
-# hl7-fhir-udap-test-client-ui
+# hl7-fhir-udap-client-test-ui
 
 ## Getting Started
 
@@ -21,8 +21,8 @@ Links to the other repositories in the collection:
 - [hl7-fhir-udap-client](https://github.com/Evernorth/hl7-fhir-udap-client#readme)
 - [hl7-fhir-udap-server](https://github.com/Evernorth/hl7-fhir-udap-server#readme)
 
-## Client User Interface
-![Client User Interface](./images/ClientUIFull.png)
+## Client Test User Interface
+![Client Test User Interface](./images/ClientUIFull.png)
 
 ## User Interface UDAP Features
 The following features are supported by the user interface:
@@ -94,7 +94,7 @@ See the [CONTRIBUTING](CONTRIBUTING.md) file for info on how to get involved.
 
 ## License
 
-The hl7-fhir-udap-test-client is Open Source Software released under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html).
+The hl7-fhir-udap-client-test is Open Source Software released under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Original Contributors
 
