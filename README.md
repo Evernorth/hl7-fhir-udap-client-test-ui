@@ -83,6 +83,7 @@ After you run the app, the first thing you will be presented with is the Add Ser
 ## Known Issues
 - The Add Server form does not use client side validation.  Once that is added the check on the server side can be removed.
 - Console.debug statements with TODO comments should not be inlcuded in production applications.
+- The UI does not support delete or edit registration presently.
 
 ## Getting Help
 

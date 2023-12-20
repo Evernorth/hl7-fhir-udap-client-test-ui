@@ -515,6 +515,7 @@ app.post('/saveserver', async (req, res) => {
                 //Instantiate new clients for this server
                 udapClientB2b = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
                 udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
+                mustAddServer = false
                 res.redirect("/")
             }
         }
