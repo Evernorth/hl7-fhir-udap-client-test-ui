@@ -13,8 +13,8 @@
     "privateKeyPassword": "pk12 password",
     "trustAnchorFile": "udap_pki/Community Trust Anchor",
     "udapServerFile": "config/udap_servers.json",
-    "b2cSan": "SAN to use for B2C client",
-    "b2bSan":"SAN to use for B2B client",
+    "ccSan": "SAN to use for Client Credentials client",
+    "authCodeSan":"SAN to use for Auth Code client",
     "logouri": "path to logo uri .PNG, JPG, or GIF image file"
   },
   "sessionSecret": "unique string to use as session secret"
