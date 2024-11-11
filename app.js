@@ -45,8 +45,8 @@ const privateKeyPassword = config.get("udapclient.privateKeyPassword")
 const trustAnchorFilename = config.get("udapclient.trustAnchorFile")
 const clientContact = config.get("udapclient.clientContact")
 const udapServerFile = config.get("udapclient.udapServerFile")
-const ccSubjectAltName = config.get("udapclient.b2bSan")
-const authCodeSubjectAltName = config.get("udapclient.b2cSan")
+const ccSubjectAltName = config.get("udapclient.ccSan")
+const authCodeSubjectAltName = config.get("udapclient.authCodeSan")
 const redirectUrl = "http://" + host + ":" + port + "/callback"
 const logouri = config.get("udapclient.logouri")
 var udapServerConfig = {}
@@ -55,15 +55,14 @@ const clientName = config.get("udapclient.clientName")
 var udapServers = []
 var udapServer = {}
 var newUdapServer = {}
-var udapClientB2b = null
-var udapClientB2c = null
+var ccUdapClient = null
+var authCodeUdapClient = null
 var mustAddServer = false
 
 
 
 const ccRegistrationObject = {
-    client_name: clientName + " UDAP B2B Flow",
-    grant_types: ['client_credentials'],
+    client_name: clientName + " UDAP Client Credentials Flow",
     response_types: ['token'],
     contacts: [clientContact],
     logo_uri: '',
@@ -72,9 +71,8 @@ const ccRegistrationObject = {
 }
 
 const authCodeRegistrationObject = {
-    client_name: clientName + " UDAP B2C Flow",
+    client_name: clientName + " UDAP Auth Code Flow",
     contacts: [clientContact],
-    grant_types: ['authorization_code'],
     response_types: ['code'],
     redirect_uris: [redirectUrl],
     logo_uri: logouri,
@@ -203,11 +201,11 @@ async function getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, 
 app.get('/', (req, res) => {
     res.render('index', {
         clientName: clientName,
-        b2bToken: req.session.b2bToken,
-        b2cToken: req.session.b2cToken,
+        ccToken: req.session.ccToken,
+        authCodeToken: req.session.authCodeToken,
         registrationError: req.session.registrationError,
-        b2bTokenError: req.session.b2bTokenError,
-        b2cTokenError: req.session.b2cTokenError,
+        ccTokenError: req.session.ccTokenError,
+        authCodeTokenError: req.session.authCodeTokenError,
         udapServer: udapServer,
         udapServers: udapServers,
         newUdapServer: newUdapServer,
@@ -221,77 +219,27 @@ app.post('/', async (req, res) => {
     var patientSearchResponse = ""
     var patientMatchResponse = ""
     if (req.body.action != null) {
-        if (req.body.action == 'clientReg') {
-            if (udapClientB2b == null) {
-                try {
-                    udapClientB2b = getUdapClientAndMataData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, '', udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-                } catch (error) {
-                    req.session.registrationError = "Client Credentials Client Metadata Error:\r\n" + e.message
-                }
-            }
-            if (udapClientB2b.udapWellKnownMetadata.grant_types_supported.includes("client_credentials") && udapServer.ccClientId == '') {
-                console.log("UDAP B2B Application is not registered.  Registering with FHIR server.")
-                var regReturn
-                try {
-                    ccRegistrationObject.scope = udapServer.ccScopes,
-                    regReturn = await registration(ccRegistrationObject, req, udapClientB2b)
-                    udapServer.ccClientId = regReturn.client_id
-                    udapServer.ccScopes = regReturn.scope
-                    //Update client id after successful registration
-                    udapClientB2b.clientId = regReturn.client_id
-                    updateServerFile(udapServerConfig.udapServers, udapServer)
-                }
-                catch (e) {
-                    req.session.registrationError = "Client Credentials Registration Error:\r\n" + e.message
-                }
-            }
-            if (udapClientB2c == null) {
-                try {
-                    udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, '', udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-                }
-                catch (error) {
-                    req.session.registrationError = "Auth Code Flow Metadata Error:\r\n" + e.message
-                }
-            }
-            if (udapClientB2c.udapWellKnownMetadata.grant_types_supported.includes("authorization_code") && udapServer.authCodeClientId == '') {
-
-                var regReturn
-                try {
-                    console.log("B2C Application is not registered.  Registering with FHIR server.")
-                    authCodeRegistrationObject.scope = udapServer.authCodeScopes
-                    regReturn = await registration(authCodeRegistrationObject, req, udapClientB2c)
-                    udapServer.authCodeClientId = regReturn.client_id
-                    udapServer.authCodeScopes = regReturn.scope
-                    //Update client id after successful registration
-                    udapClientB2c.clientId = regReturn.client_id
-                    updateServerFile(udapServerConfig.udapServers, udapServer)
-                }
-                catch (e) {
-                    req.session.registrationError = req.session.registrationError + "\r\nAuth Code Flow Registration Error:\r\n" + e.message
-                }
-            }
-        }
-        else if (req.body.action == 'getB2bToken') {
+        if (req.body.action == 'getB2bToken') {
             try {
-                if (udapClientB2b == null) {
-                    udapClientB2b = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+                if (ccUdapClient == null) {
+                    ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
                 }
-                var tokenResponse = await udapClientB2b.udapTokenRequestClientCredentials(udapServer.ccScopes)
-                req.session.b2bToken = tokenResponse.data.access_token
-                req.session.b2bTokenError = ""
+                var tokenResponse = await ccUdapClient.udapTokenRequestClientCredentials(udapServer.ccScopes)
+                req.session.ccToken = tokenResponse.data.access_token
+                req.session.ccTokenError = ""
             }
             catch (e) {
                 console.error(e)
-                req.session.b2bTokenError = e.code + ' - ' + e.message
+                req.session.ccTokenError = e.code + ' - ' + e.message
             }
 
         }
         else if (req.body.action == 'getB2cToken') {
             try {
-                if (udapClientB2c == null) {
-                    udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+                if (authCodeUdapClient == null) {
+                    authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
                 }
-                var authorizeData = await udapClientB2c.udapAuthorizeRequest(req.body.idpUrl, udapServer.authCodeScopes, redirectUrl)
+                var authorizeData = await authCodeUdapClient.udapAuthorizeRequest(req.body.idpUrl, udapServer.authCodeScopes, redirectUrl)
                 console.debug("Authorize Data: ")
                 console.debug(authorizeData)
                 req.session.authz_state = authorizeData.state
@@ -299,7 +247,7 @@ app.post('/', async (req, res) => {
             }
             catch (e) {
                 console.error(e)
-                req.session.b2bTokenError = e.message
+                req.session.ccTokenError = e.message
             }
         }
         else if (req.body.action == 'clearSession') {
@@ -307,11 +255,11 @@ app.post('/', async (req, res) => {
         }
         else if (req.body.action == 'patientQuery') {
             var accessToken = ""
-            if (req.body.tokenToUse == 'b2b') {
-                accessToken = req.session.b2bToken
+            if (req.body.tokenToUse == 'cc') {
+                accessToken = req.session.ccToken
             }
             else {
-                accessToken = req.session.b2cToken
+                accessToken = req.session.authCodeToken
             }
             //Run our FHIR query here!
             var resource = req.body.resourceToGet
@@ -337,11 +285,11 @@ app.post('/', async (req, res) => {
         }
         else if (req.body.action == 'patientSearch') {
             var accessToken = ""
-            if (req.body.tokenToUse == 'b2b') {
-                accessToken = req.session.b2bToken
+            if (req.body.tokenToUse == 'cc') {
+                accessToken = req.session.ccToken
             }
             else {
-                accessToken = req.session.b2cToken
+                accessToken = req.session.authCodeToken
             }
             var formattedDob = formatDate(Date.parse(req.body.dob))
             //Run our FHIR query here!
@@ -358,11 +306,11 @@ app.post('/', async (req, res) => {
         }
         else if (req.body.action == 'patientMatch') {
             var accessToken = ""
-            if (req.body.tokenToUse == 'b2b') {
-                accessToken = req.session.b2bToken
+            if (req.body.tokenToUse == 'cc') {
+                accessToken = req.session.ccToken
             }
             else {
-                accessToken = req.session.b2cToken
+                accessToken = req.session.authCodeToken
             }
             //Run our FHIR query here!
             const patientMatchUrl = udapServer.serverBaseUrl + '/Patient/$match'
@@ -434,28 +382,28 @@ app.post('/', async (req, res) => {
         udapServer = findSelectedServer(udapServers, req.body.dropDownServerSelect)
         updateServerFile(udapServers, udapServer)
         //new server clear appropriate session variables
-        req.session.b2bToken = ""
-        req.session.b2cToken = ""
-        req.session.b2bTokenError = ""
-        req.session.b2cTokenError = ""
+        req.session.ccToken = ""
+        req.session.authCodeToken = ""
+        req.session.ccTokenError = ""
+        req.session.authCodeTokenError = ""
         req.session.registrationError = ""
         req.session.addServerError = ""
         //Instantiate new clients for this server
-        udapClientB2b = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-        udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
     }
     //Ugly hack to ensure that if we're redirecting, let's not try to render the page.
     if (req.body.action != 'getB2cToken') {
         res.render('index', {
             clientName: clientName,
-            b2bToken: req.body.action == 'clearSession' ? "" : req.session.b2bToken,
-            b2cToken: req.body.action == 'clearSession' ? "" : req.session.b2cToken,
+            ccToken: req.body.action == 'clearSession' ? "" : req.session.ccToken,
+            authCodeToken: req.body.action == 'clearSession' ? "" : req.session.authCodeToken,
             queryResponse: patientQueryResponse,
             matchResponse: patientMatchResponse,
             patientSearchResponse: patientSearchResponse,
             registrationError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.registrationError),
-            b2bTokenError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.b2bTokenError),
-            b2cTokenError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.b2cTokenError),
+            ccTokenError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.ccTokenError),
+            authCodeTokenError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.authCodeTokenError),
             udapServer: udapServer,
             udapServers: udapServers,
             mustAddServer : mustAddServer,
@@ -467,12 +415,111 @@ app.post('/', async (req, res) => {
 //Application endpoints
 app.get('/callback', async (req, res) => {
     if (req.query.state == req.session.authz_state) {
-        var tokenResponse = await udapClientB2c.udapTokenRequestAuthCode(req.query.code, redirectUrl)
-        req.session.b2cToken = tokenResponse.data.access_token
+        var tokenResponse = await authCodeUdapClient.udapTokenRequestAuthCode(req.query.code, redirectUrl)
+        req.session.authCodeToken = tokenResponse.data.access_token
         res.redirect("/")
     }
     else {
         res.send("An invalid authorization code state was sent.")
+    }
+})
+
+app.post('/clientreg',async(req,res) => {
+    if (ccUdapClient == null && req.body.regToPerform =='cc') {
+        try {
+            ccUdapClient = getUdapClientAndMataData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, '', udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        } catch (error) {
+            req.session.registrationError = "Client Credentials Client Metadata Error:\r\n" + e.message
+        }
+    }
+    if (ccUdapClient.udapWellKnownMetadata.grant_types_supported.includes("client_credentials") && req.body.regToPerform =='cc') {
+        console.log("Server supports client_credentials.  Registering with FHIR server.")
+        var regReturn
+        try {
+            ccRegistrationObject.scope = udapServer.ccScopes,
+            ccRegistrationObject.grant_types= ['client_credentials']
+            regReturn = await registration(ccRegistrationObject, req, ccUdapClient)
+            udapServer.ccClientId = regReturn.client_id
+            udapServer.ccScopes = regReturn.scope
+            //Update client id after successful registration
+            ccUdapClient.clientId = regReturn.client_id
+            updateServerFile(udapServerConfig.udapServers, udapServer)
+        }
+        catch (e) {
+            req.session.registrationError = "Client Credentials Registration Error:\r\n" + e.message
+        }
+        res.redirect("/")
+    }
+    if (authCodeUdapClient == null && req.body.regToPerform =='authCode') {
+        try {
+            authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, '', udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        }
+        catch (error) {
+            req.session.registrationError = "Auth Code Flow Metadata Error:\r\n" + e.message
+        }
+        res.redirect("/")
+    }
+    if (authCodeUdapClient.udapWellKnownMetadata.grant_types_supported.includes("authorization_code") && req.body.regToPerform =='authCode') {
+
+        var regReturn
+        try {
+            console.log("Server supports authorization_code.  Registering with FHIR server.")
+            authCodeRegistrationObject.scope = udapServer.authCodeScopes
+            authCodeRegistrationObject.grant_types = ['authorization_code']
+            regReturn = await registration(authCodeRegistrationObject, req, authCodeUdapClient)
+            udapServer.authCodeClientId = regReturn.client_id
+            udapServer.authCodeScopes = regReturn.scope
+            //Update client id after successful registration
+            authCodeUdapClient.clientId = regReturn.client_id
+            updateServerFile(udapServerConfig.udapServers, udapServer)
+        }
+        catch (e) {
+            req.session.registrationError = req.session.registrationError + "\r\nAuth Code Flow Registration Error:\r\n" + e.message
+        }
+        res.redirect("/")
+    }
+})
+
+app.post('/delclientreg', async(req,res) => {
+    if (ccUdapClient != null && req.body.regToPerform =='cc') 
+    {
+        var regReturn
+        try {
+            ccRegistrationObject.scope = udapServer.ccScopes,
+            ccRegistrationObject.grant_types = [];
+            regReturn = await registration(ccRegistrationObject, req, ccUdapClient)
+            if (regReturn.grant_types.length == 0)
+            {   
+                //Update client id after successful registration
+                ccUdapClient.clientId = ''
+                udapServer.ccClientId = ''
+                updateServerFile(udapServerConfig.udapServers, udapServer)
+            }
+        }
+        catch (e) {
+            req.session.registrationError = "Delete Client Credentials Registration Error:\r\n" + e.message
+        }
+        res.redirect("/")
+    }
+    else if (authCodeUdapClient != null && req.body.regToPerform =='authCode') 
+    {
+        var regReturn
+        try {
+            authCodeRegistrationObject.scope = udapServer.authCodeScopes,
+            authCodeRegistrationObject.grant_types = [];
+            regReturn = await registration(authCodeRegistrationObject, req, authCodeUdapClient)
+            if (regReturn.grant_types.length == 0)
+            {   
+                //Update client id after successful registration
+                authCodeUdapClient.clientId = ''
+                udapServer.authCodeClientId = ''
+                updateServerFile(udapServerConfig.udapServers, udapServer)
+            }
+        }
+        catch (e) {
+            req.session.registrationError = "Delete Auth Code Flow Registration Error:\r\n" + e.message
+        }
+        res.redirect("/")
     }
 })
 
@@ -513,8 +560,8 @@ app.post('/saveserver', async (req, res) => {
                 updateServerFile(udapServers, udapServer)
                 newUdapServer = {}
                 //Instantiate new clients for this server
-                udapClientB2b = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-                udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
+                ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+                authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
                 mustAddServer = false
                 res.redirect("/")
             }
@@ -533,8 +580,8 @@ app.listen(port, async () => {
         udapServers = udapServerConfig.udapServers
         udapServer = findSelectedServer(udapServers, udapServerConfig.selectedServerName)
         //Instantiate new clients for this server
-        udapClientB2b = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-        udapClientB2c = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
+        ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
         mustAddServer = false
     }
     else{

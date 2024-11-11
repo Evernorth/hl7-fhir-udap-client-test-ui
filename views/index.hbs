@@ -129,11 +129,11 @@
         </div>
     </div>
 
-    <div class="container">
-        <div class="row">
+    <div class="container-fluid w-75">
+        <div class="row w-100">
             <div class="col-6">
                 <div class="container">
-                    <div class="card-deck mb-3 text-center">
+                    <div class="card-deck mb-3 text-center border 5 cark">
                         <div class="card mb-4 box-shadow">
                             <div class="card-header">
                                 <h4 class="my-0 font-weight-normal">Client Details</h4>
@@ -141,16 +141,37 @@
                             <div class="card-body">
                                 <ul class="list-unstyled mt-3 mb-4">
                                     <li><span class="fw-bold">Client Name:</span> {{clientName}}</li>
-                                    <li><span class="fw-bold">B2B Client Id:</span> {{udapServer.ccClientId}}</li>
-                                    <li><span class="fw-bold">B2C Client Id:</span> {{udapServer.authCodeClientId}}</li>
-                                    <li><span class="fw-bold">B2B Scopes Requested:</span> {{udapServer.ccScopes}}</li>
-                                    <li><span class="fw-bold">B2C Scopes Requested:</span> {{udapServer.authCodeScopes}}</li>
+                                    <li><span class="fw-bold">Client Credentials Client Id:</span> {{udapServer.ccClientId}}</li>
+                                    <li><span class="fw-bold">Auth Code Flow Client Id:</span> {{udapServer.authCodeClientId}}</li>
+                                    <li><span class="fw-bold">Client Credentials Scopes Requested:</span> {{udapServer.ccScopes}}</li>
+                                    <li><span class="fw-bold">Auth Code Flow Scopes Requested:</span> {{udapServer.authCodeScopes}}</li>
                                     <li><span class="fw-bold">Error from Registration:</span> {{registrationError}}</li>
                                 </ul>
                                 <form id="reg" action="/" method="POST">
-                                    <input type="hidden" name="action" value="clientReg" />
-                                    <button type="submit" class="btn btn-lg btn-block btn-primary">Register
-                                        Client</button>
+                                    <!--<input type="hidden" name="action" value="clientReg" />-->
+                                     <div class="col-auto">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="regToPerform" id="inlineRadio1"
+                                                value="cc" checked>
+                                            <label class="form-check-label" for="inlineRadio1">Client Credentials Registration</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="regToPerform" id="inlineRadio2"
+                                                value="authCode">
+                                            <label class="form-check-label" for="inlineRadio2">Auth Code Flow Registration</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="submit" class="btn btn-lg btn-block btn-primary" formaction="clientreg">Register
+                                            Client</button>
+                                        <button type="submit" class="btn btn-lg btn-block btn-primary" formaction ="delclientreg" 
+                                            {{#unless udapServer.ccClientId}}
+                                                {{#unless udapServer.authCodeClientId}} 
+                                                    disabled
+                                                {{/unless}}
+                                            {{/unless}}
+                                        >Delete Client</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -158,16 +179,16 @@
                     <div class="card-deck mb-3 text-center">
                         <div class="card mb-4 box-shadow">
                             <div class="card-header">
-                                <h4 class="my-0 font-weight-normal">B2B Token</h4>
+                                <h4 class="my-0 font-weight-normal">Client Credentials Token</h4>
                             </div>
                             <div class="card-body">
                                 <ul class="list-unstyled mt-3 mb-4">
-                                    <li><span class="fw-bold">Issued to:</span> {{b2bTokenSubject}}</li>
+                                    <li><span class="fw-bold">Issued to:</span> {{ccTokenSubject}}</li>
                                     <li><span class="fw-bold">Content:</span></li>
-                                    <li>{{b2bToken}}</li>
-                                    <li><span class="fw-bold">Error from Token Request:</span> {{b2bTokenError}}</li>
+                                    <li>{{ccToken}}</li>
+                                    <li><span class="fw-bold">Error from Token Request:</span> {{ccTokenError}}</li>
                                 </ul>
-                                <form id="b2b" action="/" method="POST">
+                                <form id="cc" action="/" method="POST">
                                     <input type="hidden" name="action" value="getB2bToken" />
                                     <button type="submit" class="btn btn-lg btn-block btn-primary">Get
                                         Token</button>
@@ -176,16 +197,16 @@
                         </div>
                         <div class="card mb-4 box-shadow">
                             <div class="card-header">
-                                <h4 class="my-0 font-weight-normal">B2C Token</h4>
+                                <h4 class="my-0 font-weight-normal">Auth Code Flow Token</h4>
                             </div>
                             <div class="card-body">
                                 <ul class="list-unstyled mt-3 mb-4">
-                                    <li><span class="fw-bold">Issued to:</span> {{b2cTokenSubject}}</li>
+                                    <li><span class="fw-bold">Issued to:</span> {{authCodeTokenSubject}}</li>
                                     <li><span class="fw-bold">Content:</span></li>
-                                    <li>{{b2cToken}}</li>
-                                    <li><span class="fw-bold">Error from Token Request:</span> {{b2cTokenError}}</li>
+                                    <li>{{authCodeToken}}</li>
+                                    <li><span class="fw-bold">Error from Token Request:</span> {{authCodeTokenError}}</li>
                                 </ul>
-                                <form id="b2c" action="/" method="POST">
+                                <form id="authCode" action="/" method="POST">
                                     <div class="form-row align-items-center">
                                         <div class="col-auto">
                                             <label class="sr-only" for="idpUrl">IDP Url</label>
@@ -223,13 +244,13 @@
                                 <div class="col-auto">
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio1"
-                                            value="b2b" checked>
-                                        <label class="form-check-label" for="inlineRadio1">Use B2B Token</label>
+                                            value="cc" checked>
+                                        <label class="form-check-label" for="inlineRadio1">Use Client Credentials Token</label>
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio2"
-                                            value="b2c">
-                                        <label class="form-check-label" for="inlineRadio2">Use B2C Token</label>
+                                            value="authCode">
+                                        <label class="form-check-label" for="inlineRadio2">Use Auth Code Flow Token</label>
                                     </div>
                                 </div>
                                 <div class="col">
@@ -288,26 +309,26 @@
                                         placeholder="Date of Birth" name="dob">
                                 </div>
                                 <div class="col-auto">
-                                    <label class="sr-only" for="gender">DOB</label>
+                                    <label class="sr-only" for="gender">Gender</label>
                                     <input type="text" class="form-control mb-2" id="inputGender" placeholder="Gender"
                                         name="gender">
                                 </div>
 
                                 <div class="col-auto">
                                     <label class="sr-only" for="phone">Email</label>
-                                    <input type="text" class="form-control mb-2" id="inputPhone"
-                                        placeholder="Phone Number" name="phone">
+                                    <input type="text" class="form-control mb-2" id="inputEmail"
+                                        placeholder="Email" name="email">
                                 </div>
                                 <div class="col-auto">
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio1"
-                                            value="b2b" checked>
-                                        <label class="form-check-label" for="inlineRadio1">Use B2B Token</label>
+                                            value="cc" checked>
+                                        <label class="form-check-label" for="inlineRadio1">Use Client Credentials Token</label>
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="tokenToUse" id="inlineRadio2"
-                                            value="b2c">
-                                        <label class="form-check-label" for="inlineRadio2">Use B2C Token</label>
+                                            value="authCode">
+                                        <label class="form-check-label" for="inlineRadio2">Use Auth Code Flow Token</label>
                                     </div>
                                 </div>
                                 <div class="col-auto">
@@ -335,7 +356,7 @@
                                     <label class="sr-only" for="givenName">Given Name</label>
                                     <input type="text" class="form-control mb-2" id="inputGivenName"
                                         placeholder="Given Name" name="givenName">
-                                    <input type="hidden" name="action" value="patient_match" />
+                                    <input type="hidden" name="action" value="patientMatch" />
                                 </div>
                                 <div class="col-auto">
                                     <label class="sr-only" for="familyName">Family Name</label>
@@ -348,20 +369,34 @@
                                         placeholder="Date of Birth" name="dob">
                                 </div>
                                 <div class="col-auto">
-                                    <label class="sr-only" for="gender">DOB</label>
+                                    <label class="sr-only" for="gender">Gender</label>
                                     <input type="text" class="form-control mb-2" id="inputGender" placeholder="Gender"
                                         name="gender">
                                 </div>
 
                                 <div class="col-auto">
                                     <label class="sr-only" for="phone">Email</label>
-                                    <input type="text" class="form-control mb-2" id="inputPhone"
-                                        placeholder="Phone Number" name="phone">
+                                    <input type="text" class="form-control mb-2" id="inputEmail"
+                                        placeholder="Email" name="email">
                                 </div>
                                 <div class="col-auto">
                                     <label class="sr-only" for="phone">Phone</label>
                                     <input type="text" class="form-control mb-2" id="inputPhone"
                                         placeholder="Phone Number" name="phone">
+                                </div>
+                            </div>
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="ccToken"
+                                            value="cc" checked>
+                                        <label class="form-check-label" for="ccToken">Use Client Credentials Token</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tokenToUse" id="authCodeToken"
+                                            value="authCode">
+                                        <label class="form-check-label" for="authCodeToken">Use Auth Code Flow Token</label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row align-items-center">
@@ -380,19 +415,6 @@
                                         <input class="form-check-input" type="radio" name="validation_level"
                                             id="inlineRadio3" value="IDI-Patient-L1">
                                         <label class="form-check-label" for="inlineRadio2">IDI-Patient-L1</label>
-                                    </div>
-                                </div>
-
-                                <div class="col-auto">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="tokenToUse" id="b2bToken"
-                                            value="b2b" checked>
-                                        <label class="form-check-label" for="b2bToken">Use B2B Token</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="tokenToUse" id="b2cToken"
-                                            value="b2c">
-                                        <label class="form-check-label" for="b2cToken">Use B2C Token</label>
                                     </div>
                                 </div>
                                 <div class="col-auto">
