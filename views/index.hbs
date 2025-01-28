@@ -34,37 +34,123 @@
 </head>
 
 <body>
-
-    <div
-        class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow border border-primary">
-        <div class="mt-auto p-2 bd-highlight">
-            {{!-- <img src="/static/logo.png" /> --}}
-            <h5 class="my-0 mr-md-auto font-weight-normal">{{clientName}}</h5>
-        </div>
-        <div class="col-xs-3">
-            <form id="serverSelect" action="/" method="POST">
-                <div class="input-group">
-                    <label class="input-group-text input-group-text-md" for="inputGroupSelect01">Servers</label>
-                    <select class="form-select form-select-md" name="dropDownServerSelect" id="dropDownServerSelect"
-                        onchange="this.form.submit()">
-                        {{#each udapServers}}
-                            <option{{#if this.selected}} selected {{/if}}>{{this.name}}</option>
-                        {{/each}}
-                    </select>
+    <div class="d-flex flex-column flex-row p-3 mb-3 bg-white border-bottom box-shadow border border-primary">
+        <div class="row pb-3">
+            <form id="communitySelect" action="/" method="POST" class="row">
+                <div class="col-4">
+                    {{!-- <img src="/static/logo.png" /> --}}
+                    <h5 class="my-0 mr-md-auto font-weight-normal">{{clientName}}</h5>
+                </div>
+                <div class="col-3">
+                    <div class="input-group">
+                        <label class="input-group-text input-group-text-md" for="inputGroupSelect01">Communites</label>
+                        <select class="form-select form-select-md" name="dropDownCommunitySelect" id="dropDownCommunitySelect"
+                            onchange="this.form.submit()">
+                            {{#each udapCommunities}}
+                                <option{{#if this.selected}} selected {{/if}}>{{this.communityId}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-block btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#addCommunityModal">Add
+                        UDAP Community</button>
                 </div>
             </form>
         </div>
-        <div class="mt-auto p-2 bd-highlight">Configured Base Url: {{udapServer.serverBaseUrl}}</div>
-        <div class="mt-auto p-2 bd-highlight">
-            <form id="clear" action="/" method="POST">
-                <input type="hidden" name="action" value="clearSession" />
-                <button type="submit" class="btn btn-block btn-primary">Clear Test Session</button>
+        <div class="row">
+            <form id="serverSelect" action="/" method="POST" class="row"></form>
+                <div class="col-4">Configured Base Url: {{udapServer.serverBaseUrl}}</div>
+                <div class="col-3">
+                    <div class="input-group">
+                        <label class="input-group-text input-group-text-md" for="inputGroupSelect02">Servers</label>
+                        <select class="form-select form-select-md" name="dropDownServerSelect" id="dropDownServerSelect"
+                            onchange="this.form.submit()">
+                            {{#each udapServers}}
+                                <option{{#if this.selected}} selected {{/if}}>{{this.name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button type="submit" class="btn btn-block btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#addServerModal">Add
+                        UDAP Server</button>
+                </div>
             </form>
+            <div class="col-2">
+                <form id="clear" action="/" method="POST">
+                    <input type="hidden" name="action" value="clearSession" />
+                    <button type="submit" class="btn btn-block btn-primary">Clear Test Session</button>
+                </form>
+            </div>
+
         </div>
-        <div class="mt-auto p-2 bd-highlight">
-            <button type="submit" class="btn btn-block btn-primary" data-bs-toggle="modal"
-                data-bs-target="#addServerModal">Add
-                UDAP Server</button>
+    </div>
+    <!-- Add Community Modal -->
+    <!-- Button trigger modal div id -->
+    <div class="modal fade" id="addCommunityModal" tabindex="-1" role="dialog" aria-labelledby="addCommunityLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCommunityLabel">Add UDAP Community</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="udapCommunity" action="/" method="POST">
+                        <div class="form-group">
+                            <label class="sr-only" for="communityId">Community Id</label>
+                            <input type="text" class="form-control mb-2" id="communityId" placeholder="Community Id"
+                                name="communityId" value='{{newUdapCommunity.communityId}}'>
+                            <input type="hidden" name="action" value="addCommunity" />
+                            <div class="invalid-feedback">
+                                Please choose a Community Id.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="baseUrl">Private Key Filename</label>
+                            <input type="text" class="form-control mb-2" id="privateKeyFilename" placeholder="Private Key Filename"
+                                name="privateKeyFilename" value='{{newUdapCommunity.privateKeyFilenam}}'>
+                            <input type="hidden" name="action" value="browsePrivateKeyFilename" />
+                            <div class="invalid-feedback">
+                                Please add the private key filename in .p12 format.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="privateKeyPassword">Private Key Password</label>
+                            <input type="text" class="form-control mb-2" id="privateKeyPassword" placeholder="Private Key password"
+                                name="privateKeyPassword" value='{{newUdapServer.privateKeyPassword}}'>
+                            <div class="invalid-feedback">
+                                Please add the private key password.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="trustAnchorFilename">Trust Anchor Filename</label>
+                             <input type="text" class="form-control mb-2" id="trustAnchorFilename" placeholder="Trust Anchor Filename"
+                                name="trustAnchorFilename" value='{{newUdapServer.trustAnchorFilename}}'>
+                            <div class="invalid-feedback">
+                                Please add the trust anchor filename.
+                            </div>
+                        </div>
+            
+                        <div class="modal-footer">
+                            <input type="hidden" name="action" value="saveCommunity" />
+                            <button type="button" class="btn btn-secondary mb-2" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary mb-2" id="saveCommunity" name="saveCommunity"
+                                formaction="/savecommunity" data-bs-dismiss="modal">Save Community</button>
+                        </div>
+                        <div>
+                            <ul>
+                                <li>Error: {{addCommunityError}}</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Add Server Modal -->
@@ -81,6 +167,20 @@
                 </div>
                 <div class="modal-body">
                     <form id="udapServer" action="/" method="POST">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <label class="input-group-text input-group-text-md" for="inputGroupSelect01">Community Id</label>
+                                <select class="form-select form-select-md" name="dropDownCommunitySelectServer" id="dropDownCommunitySelectServer">
+                                    {{#each udapCommunities}}
+                                        <option{{#if this.selected}} selected {{/if}}>{{this.communityId}}</option>
+                                    {{/each}}
+                                </select>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please choose a Community Id.
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label class="sr-only" for="serverName">Server Name</label>
                             <input type="text" class="form-control mb-2" id="serverName" placeholder="Server Name"
@@ -128,7 +228,6 @@
             </div>
         </div>
     </div>
-
     <div class="container-fluid w-75">
         <div class="row w-100">
             <div class="col-6">
