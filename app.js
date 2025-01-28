@@ -40,10 +40,6 @@ const host = config.get("server.host")
 const organizationId = config.get("udapclient.organizationId")
 const organizationName = config.get("udapclient.organizationName")
 const purposeOfUse = config.get("udapclient.purposeOfUse")
-//These need to be updated
-/* const privateKeyFilename = config.get("udapclient.privateKeyFile")
-const privateKeyPassword = config.get("udapclient.privateKeyPassword")
-const trustAnchorFilename = config.get("udapclient.trustAnchorFile") */
 const clientContact = config.get("udapclient.clientContact")
 const udapServerFile = config.get("udapclient.udapServerFile")
 const udapCommunityFile = config.get("udapclient.udapCommunityFile")
