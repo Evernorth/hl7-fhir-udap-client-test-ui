@@ -40,26 +40,31 @@ const host = config.get("server.host")
 const organizationId = config.get("udapclient.organizationId")
 const organizationName = config.get("udapclient.organizationName")
 const purposeOfUse = config.get("udapclient.purposeOfUse")
-const privateKeyFilename = config.get("udapclient.privateKeyFile")
+//These need to be updated
+/* const privateKeyFilename = config.get("udapclient.privateKeyFile")
 const privateKeyPassword = config.get("udapclient.privateKeyPassword")
-const trustAnchorFilename = config.get("udapclient.trustAnchorFile")
+const trustAnchorFilename = config.get("udapclient.trustAnchorFile") */
 const clientContact = config.get("udapclient.clientContact")
 const udapServerFile = config.get("udapclient.udapServerFile")
+const udapCommunityFile = config.get("udapclient.udapCommunityFile")
 const ccSubjectAltName = config.get("udapclient.ccSan")
 const authCodeSubjectAltName = config.get("udapclient.authCodeSan")
 const redirectUrl = "http://" + host + ":" + port + "/callback"
 const logouri = config.get("udapclient.logouri")
-var udapServerConfig = {}
 const clientName = config.get("udapclient.clientName")
+var udapCommunityConfig = {}
+var udapServerConfig = {}
 //Needed for hbs template
 var udapServers = []
 var udapServer = {}
 var newUdapServer = {}
+var udapCommunities = []
+var udapCommunity = {}
+var newUdapCommunity = {}
 var ccUdapClient = null
 var authCodeUdapClient = null
 var mustAddServer = false
-
-
+var addingCommunity = false
 
 const ccRegistrationObject = {
     client_name: clientName + " UDAP Client Credentials Flow",
@@ -135,10 +140,26 @@ function findSelectedServer(udapServers, selectedServerName) {
                 udapServer.authCodeScopes = server.authCodeScopes
                 udapServer.authCodeClientId = server.authCodeClientId
                 udapServer.selected = true
+                udapServer.communityId = server.communityId
             }
         })
     }
     return udapServer
+}
+
+function findSelectedCommunity(udapCommunities, selectedCommunityId) {
+    var udapCommunity = {}
+    if (udapCommunities != null) {
+        udapCommunities.forEach(function (community) {
+            if (community.communityId == selectedCommunityId) {
+                udapCommunity.communityId = community.communityId
+                udapCommunity.privateKeyFilename = community.privateKeyFilename
+                udapCommunity.privateKeyPassword = community.privateKeyPassword
+                udapCommunity.trustAnchorFilename = community.trustAnchorFilename
+            }
+        })
+    }
+    return udapCommunity
 }
 
 function updateServerFile(udapServers, selectedServer) {
@@ -147,6 +168,13 @@ function updateServerFile(udapServers, selectedServer) {
     udapServerConfig.udapServers = udapServers
     fs.writeFileSync(udapServerFile, JSON.stringify(udapServerConfig));
 }
+
+function updateCommunityFile(udapCommunities,selectedCommunity) {
+    updateSelectedCommunity(udapCommunities,selectedCommunity)
+    udapCommunityConfig.udapCommunities = udapCommunities
+    fs.writeFileSync(udapCommunityFile, JSON.stringify(udapCommunityConfig));
+}
+
 
 //Finds selected server in the array originally from config file and updates it using selectedServer object
 //If the server is not found it adds it to the array
@@ -180,12 +208,37 @@ function populateServer(server,selectedServer){
     server.authCodeScopes = selectedServer.authCodeScopes
     server.authCodeClientId = selectedServer.authCodeClientId
     server.selected = true
+    server.communityId = selectedServer.communityId
+   
+}
+
+function updateSelectedCommunity(udapCommunities, selectedCommunity) {
+    var found = false
+    if (udapCommunities.length != 0) {
+        udapCommunities.forEach(function (community) {
+            if (community.communityId == selectedCommunity.communityId) {
+                found = true
+                populateCommunity(community,selectedCommunity)
+            }
+        })
+    }
+    else {
+        var community = {}
+        populateCommunity(community,selectedCommunity)
+    }
+}
+
+function populateCommunity(community,selectedCommunity){
+    community.communityId = selectedCommunity.communityId
+    community.privateKeyFilename = selectedCommunity.privateKeyFilename
+    community.privateKeyPassword =selectedCommunity.privateKeyPassword
+    community.trustAnchorFilename = selectedCommunity.trustAnchorFilename
 }
 
 //Convenience method for instantiate object and get and validate metadata so it is cached in the client object
-async function getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, clientId, serverBaseUrl, organizationId, organizationName, purposeOfUse)
+async function getUdapClientAndMetaData(udapCommunity, clientId, serverBaseUrl, organizationId, organizationName, purposeOfUse)
 {
-    var newUdapClient = new udapClient(privateKeyFilename, privateKeyPassword, trustAnchorFilename, clientId, serverBaseUrl, organizationId, organizationName, purposeOfUse)
+    var newUdapClient = new udapClient(udapCommunity, clientId, serverBaseUrl, organizationId, organizationName, purposeOfUse)
     await newUdapClient.getAndValidateUdapMetadata(newUdapClient.udapWellknownUrl)
     if (newUdapClient.udapWellKnownMetadata.udap_profiles_supported.includes("udap_to"))
     {
@@ -208,6 +261,8 @@ app.get('/', (req, res) => {
         authCodeTokenError: req.session.authCodeTokenError,
         udapServer: udapServer,
         udapServers: udapServers,
+        udapCommunity: udapCommunity,
+        udapCommunities: udapCommunities,
         newUdapServer: newUdapServer,
         addServerError: req.session.addServerError,
         mustAddServer : mustAddServer
@@ -222,7 +277,7 @@ app.post('/', async (req, res) => {
         if (req.body.action == 'getB2bToken') {
             try {
                 if (ccUdapClient == null) {
-                    ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+                    ccUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
                 }
                 var tokenResponse = await ccUdapClient.udapTokenRequestClientCredentials(udapServer.ccScopes)
                 req.session.ccToken = tokenResponse.data.access_token
@@ -237,7 +292,7 @@ app.post('/', async (req, res) => {
         else if (req.body.action == 'getB2cToken') {
             try {
                 if (authCodeUdapClient == null) {
-                    authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+                    authCodeUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
                 }
                 var authorizeData = await authCodeUdapClient.udapAuthorizeRequest(req.body.idpUrl, udapServer.authCodeScopes, redirectUrl)
                 console.debug("Authorize Data: ")
@@ -388,10 +443,27 @@ app.post('/', async (req, res) => {
         req.session.authCodeTokenError = ""
         req.session.registrationError = ""
         req.session.addServerError = ""
+        req.session.addCommunityError = ""
         //Instantiate new clients for this server
-        ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-        authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        ccUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        authCodeUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
     }
+    // else if (req.body.dropDownCommunitySelectServer != null) {
+    //     udapCommunity = findSelectedCommunity(udapCommunities, req.body.dropDownCommunitySelectServer)
+    //     updateSelectedCommunity(udapCommunities,udapCommunity)
+    //     //new server clear appropriate session variables
+    //     req.session.ccToken = ""
+    //     req.session.authCodeToken = ""
+    //     req.session.ccTokenError = ""
+    //     req.session.authCodeTokenError = ""
+    //     req.session.registrationError = ""
+    //     req.session.addServerError = ""
+    //     req.session.addCommunityError = ""
+    //     //TODO:  update for community - maybe just remove and force server to be selected again??
+    //     //Instantiate new clients for this server
+    //     ccUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+    //     authCodeUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+    // }
     //Ugly hack to ensure that if we're redirecting, let's not try to render the page.
     if (req.body.action != 'getB2cToken') {
         res.render('index', {
@@ -404,6 +476,8 @@ app.post('/', async (req, res) => {
             registrationError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.registrationError),
             ccTokenError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.ccTokenError),
             authCodeTokenError: req.body.action == 'clearSession' ? "" : JSON.stringify(req.session.authCodeTokenError),
+            udapCommunity: udapCommunity,
+            udapCommunities: udapCommunities,
             udapServer: udapServer,
             udapServers: udapServers,
             mustAddServer : mustAddServer,
@@ -452,7 +526,7 @@ app.post('/clientreg',async(req,res) => {
     }
     if (authCodeUdapClient == null && req.body.regToPerform =='authCode') {
         try {
-            authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, '', udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+            authCodeUdapClient = await getUdapClientAndMetaData(udapCommunity, '', udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
         }
         catch (error) {
             req.session.registrationError = "Auth Code Flow Metadata Error:\r\n" + e.message
@@ -526,7 +600,8 @@ app.post('/delclientreg', async(req,res) => {
 app.post('/getmetadata', async (req, res) => {
     if (req.body.action.includes('getMetaData')) {
         if (req.body.serverBaseUrl != '') {
-            var udapClientMetaData = new udapClient(privateKeyFilename, privateKeyPassword, trustAnchorFilename, '', req.body.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+            udapCommunity = findSelectedCommunity(udapCommunities,req.body.dropDownCommunitySelectServer)
+            var udapClientMetaData = new udapClient(udapCommunity, '', req.body.serverBaseUrl, organizationId, organizationName, purposeOfUse)
             try {
                 await udapClientMetaData.getAndValidateUdapMetadata(udapClientMetaData.udapWellknownUrl)
                 newUdapServer.name = req.body.serverName
@@ -554,14 +629,15 @@ app.post('/saveserver', async (req, res) => {
                 udapServer.serverBaseUrl = req.body.serverBaseUrl
                 udapServer.ccScopes = req.body.ccScopes
                 udapServer.authCodeScopes = req.body.authCodeScopes
+                udapServer.communityId = req.body.dropDownCommunitySelectServer
                 udapServer.ccClientId = ""
                 udapServer.authCodeClientId = ""
                 udapServer.selected = true
                 updateServerFile(udapServers, udapServer)
                 newUdapServer = {}
                 //Instantiate new clients for this server
-                ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-                authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
+                ccUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+                authCodeUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
                 mustAddServer = false
                 res.redirect("/")
             }
@@ -572,6 +648,31 @@ app.post('/saveserver', async (req, res) => {
     }
 })
 
+app.post('/savecommunity', async (req, res) => {
+    if (req.body.action.includes('saveCommunity')) {
+        try {
+            //TODO:  Can remove this once client side validation is in
+            if (req.body.communityId != '') {
+                console.log("Saving new community")
+                newUdapCommunity.communityId = req.body.communityId
+                newUdapCommunity.privateKeyFilename = 'udap_pki/' + req.body.privateKeyFilename
+                newUdapCommunity.privateKeyPassword = req.body.privateKeyPassword
+                newUdapCommunity.trustAnchorFilename = 'udap_pki/' + req.body.trustAnchorFilename
+                udapCommunities.push(newUdapCommunity)
+                updateCommunityFile(udapCommunities,udapCommunity)
+                newUdapCommunity = {}
+                //Force add of at least one server in the community
+                mustAddServer = true
+                res.redirect("/")
+            }
+        }
+        catch (e) {
+            req.session.addServerError = "Error adding community: " + e.message
+        }
+    }
+})
+
+
 app.listen(port, async () => {
     //Load udapServer file
     console.log("Initializing app...")
@@ -579,9 +680,12 @@ app.listen(port, async () => {
         udapServerConfig = JSON.parse(fs.readFileSync(udapServerFile))
         udapServers = udapServerConfig.udapServers
         udapServer = findSelectedServer(udapServers, udapServerConfig.selectedServerName)
-        //Instantiate new clients for this server
-        ccUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
-        authCodeUdapClient = await getUdapClientAndMetaData(privateKeyFilename, privateKeyPassword, trustAnchorFilename, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
+        udapCommunityConfig = JSON.parse(fs.readFileSync(udapCommunityFile))
+        udapCommunities = udapCommunityConfig.udapCommunities
+        udapCommunity = findSelectedCommunity(udapCommunities, udapServer.communityId)
+        //Instantiate new clients for this server/community
+        ccUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.ccClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)
+        authCodeUdapClient = await getUdapClientAndMetaData(udapCommunity, udapServer.authCodeClientId, udapServer.serverBaseUrl, organizationId, organizationName, purposeOfUse)       
         mustAddServer = false
     }
     else{
